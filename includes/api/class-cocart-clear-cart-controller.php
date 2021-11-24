@@ -4,11 +4,10 @@
  *
  * Handles the request to clear the cart with /cart/clear endpoint.
  *
- * @author  Sébastien Dumont
- * @package CoCart\API\v2
- * @since   3.0.0
- * @version 3.1.0
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\API\v2
+ * @since    3.0.0
+ * @license  GPL-2.0+
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -76,14 +75,13 @@ class CoCart_Clear_Cart_v2_Controller {
 	 */
 	public function clear_cart( $request = array() ) {
 		try {
-			$controller = new CoCart_Cart_V2_Controller();
-
 			do_action( 'cocart_before_cart_emptied' );
 
 			WC()->session->set( 'cart', array() );
 
 			// Clear removed items if not kept.
 			if ( ! $request['keep_removed_items'] ) {
+				// \__log( 'NOT keep_removed_items' );
 				WC()->session->set( 'removed_cart_contents', array() );
 			}
 
@@ -118,6 +116,7 @@ class CoCart_Clear_Cart_v2_Controller {
 			 * then we will delete the persistent cart as well.
 			 */
 			if ( get_current_user_id() && apply_filters( 'woocommerce_persistent_cart_enabled', true ) ) {
+				// \__log( 'woocommerce_persistent_cart_enabled' );
 				delete_user_meta( get_current_user_id(), '_woocommerce_persistent_cart_' . get_current_blog_id() );
 			}
 
@@ -128,6 +127,8 @@ class CoCart_Clear_Cart_v2_Controller {
 
 				$message = __( 'Cart is cleared.', 'cart-rest-api-for-woocommerce' );
 
+				CoCart_Logger::log( $message, 'notice' );
+
 				/**
 				 * Filters message about the cart being cleared.
 				 *
@@ -136,13 +137,7 @@ class CoCart_Clear_Cart_v2_Controller {
 				 */
 				$message = apply_filters( 'cocart_cart_cleared_message', $message );
 
-				// Add notice.
-				wc_add_notice( $message );
-
-				// Get cart contents.
-				$response = $controller->get_cart_contents( $request );
-
-				return CoCart_Response::get_response( $response, $this->namespace, $this->rest_base );
+				return CoCart_Response::get_response( $message, $this->namespace, $this->rest_base );
 			} else {
 				$message = __( 'Clearing the cart failed!', 'cart-rest-api-for-woocommerce' );
 

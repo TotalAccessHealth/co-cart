@@ -2,11 +2,11 @@
 /**
  * Handles support for Advanced Shipping Packages extension.
  *
- * @author  Sébastien Dumont
- * @package CoCart\Compatibility\Modules
- * @since   3.0.0
- * @version 3.0.12
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\Compatibility\Modules
+ * @since    3.0.0
+ * @version  3.0.12
+ * @license  GPL-2.0+
  */
 
 // Exit if accessed directly.

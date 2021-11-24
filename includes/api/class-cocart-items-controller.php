@@ -4,10 +4,10 @@
  *
  * Handles the request to view just the items in the cart with /cart/items endpoint.
  *
- * @author  Sébastien Dumont
- * @package CoCart\API\v2
- * @since   3.0.0
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\API\v2
+ * @since    3.0.0
+ * @license  GPL-2.0+
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -65,7 +65,7 @@ class CoCart_Items_v2_Controller extends CoCart_Item_Controller {
 		$controller = new CoCart_Cart_V2_Controller();
 
 		$cart_contents = ! $controller->get_cart_instance()->is_empty() ? array_filter( $controller->get_cart_instance()->get_cart() ) : array();
-
+		// \__log( $cart_contents );
 		$items = $controller->get_items( $cart_contents );
 
 		// Return message should the cart be empty.

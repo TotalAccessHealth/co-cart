@@ -4,11 +4,11 @@
  *
  * Adds a note to ask the client if they are ready to upgrade to CoCart Pro.
  *
- * @author  Sébastien Dumont
- * @package CoCart\Admin\WooCommerce Admin\Notes
- * @since   2.3.0
- * @version 3.1.0
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\Admin\WooCommerce Admin\Notes
+ * @since    2.3.0
+ * @version  3.0.7
+ * @license  GPL-2.0+
  */
 
 // Exit if accessed directly.
@@ -24,11 +24,6 @@ class CoCart_WC_Admin_Upgrade_Pro_Note extends CoCart_WC_Admin_Notes {
 	const NOTE_NAME = 'cocart-wc-admin-upgrade-pro';
 
 	/**
-	 * Name of the plugin file.
-	 */
-	const PLUGIN_FILE = 'cocart-pro/cocart-pro.php';
-
-	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -38,13 +33,11 @@ class CoCart_WC_Admin_Upgrade_Pro_Note extends CoCart_WC_Admin_Notes {
 	/**
 	 * Add note.
 	 *
-	 * @access  public
+	 * @access public
 	 * @static
-	 * @since   2.3.0
-	 * @version 3.1.0
-	 * @param   string $note_name  Note name.
-	 * @param   string $seconds    How many seconds since CoCart was installed before the notice is shown.
-	 * @param   string $source     Source of the note.
+	 * @param string $note_name  Note name.
+	 * @param string $seconds    How many seconds since CoCart was installed before the notice is shown.
+	 * @param string $source     Source of the note.
 	 */
 	public static function add_note( $note_name = '', $seconds = '', $source = 'cocart' ) {
 		parent::add_note( $note_name, $seconds, $source );
@@ -56,11 +49,8 @@ class CoCart_WC_Admin_Upgrade_Pro_Note extends CoCart_WC_Admin_Notes {
 			return;
 		}
 
-		// Check if CoCart Pro is installed. If true then don't create note.
-		$is_plugin_installed = Automattic\WooCommerce\Admin\PluginsHelper::is_plugin_installed( self::PLUGIN_FILE );
-
-		if ( $is_plugin_installed ) {
-			// Delete note if note was previously created.
+		// Prevent note being created if CoCart Pro is installed.
+		if ( CoCart_Helpers::is_cocart_pro_activated() ) {
 			if ( CoCart_Helpers::is_wc_version_gte_4_8() ) {
 				Automattic\WooCommerce\Admin\Notes\Notes::delete_notes_with_name( $note_name );
 			} else {

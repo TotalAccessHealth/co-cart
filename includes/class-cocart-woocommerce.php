@@ -2,11 +2,11 @@
 /**
  * Handles tweaks made to WooCommerce to support CoCart.
  *
- * @author  Sébastien Dumont
- * @package CoCart\Classes
- * @since   2.1.2
- * @version 3.1.0
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\Classes
+ * @since    2.1.2
+ * @version  3.0.3
+ * @license  GPL-2.0+
  */
 
 // Exit if accessed directly.
@@ -80,7 +80,7 @@ if ( ! class_exists( 'CoCart_WooCommerce' ) ) {
 		 * @access  public
 		 * @static
 		 * @since   2.1.0
-		 * @version 3.1.0
+		 * @version 3.0.0
 		 */
 		public static function load_cart_from_session() {
 			// Return nothing if WP-GraphQL is requested.
@@ -107,9 +107,16 @@ if ( ! class_exists( 'CoCart_WooCommerce' ) ) {
 				$cart_key = trim( esc_html( wp_unslash( $_REQUEST['cart_key'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			}
 
+			// \__log( '$cart_key: '.$cart_key );
+
 			// Check if the user is logged in.
 			if ( is_user_logged_in() ) {
+
+				// \__log( 'YES logged in...' );
+
 				$customer_id = strval( get_current_user_id() );
+
+				// \__log( '$customer_id: '.$customer_id );
 
 				// Compare the customer ID with the requested cart key. If they match then return error message.
 				if ( isset( $_REQUEST['cart_key'] ) && $customer_id === $_REQUEST['cart_key'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -118,10 +125,15 @@ if ( ! class_exists( 'CoCart_WooCommerce' ) ) {
 					exit;
 				}
 			} else {
+
+				// \__log( 'NOT logged in...' );
+
 				$user = get_user_by( 'id', $cart_key );
 
+				// \__log( $user );
+
 				// If the user exists then return error message.
-				if ( ! empty( $user ) && apply_filters( 'cocart_secure_registered_users', true ) ) {
+				if ( ! empty( $user ) ) {
 					$error = new WP_Error( 'cocart_must_authenticate_user', __( 'Must authenticate customer as the cart key provided is a registered customer.', 'cart-rest-api-for-woocommerce' ), array( 'status' => 403 ) );
 					wp_send_json_error( $error, 403 );
 					exit;
@@ -132,33 +144,7 @@ if ( ! class_exists( 'CoCart_WooCommerce' ) ) {
 			$cart = WC()->session->get_cart( $cart_key );
 
 			// Get current cart contents.
-			$cart_contents = WC()->session->get( 'cart', array() );
-
-			// Merge requested cart. - ONLY ITEMS, COUPONS AND FEES THAT ARE NOT APPLIED TO THE CART IN SESSION WILL MERGE!!!
-			if ( ! empty( $cart_key ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-				$merge_cart = array();
-
-				$applied_coupons       = WC()->session->get( 'applied_coupons', array() );
-				$removed_cart_contents = WC()->session->get( 'removed_cart_contents', array() );
-				$cart_fees             = WC()->session->get( 'cart_fees', array() );
-
-				$merge_cart['cart']                  = maybe_unserialize( $cart['cart'] );
-				$merge_cart['applied_coupons']       = maybe_unserialize( $cart['applied_coupons'] );
-				$merge_cart['applied_coupons']       = array_unique( array_merge( $applied_coupons, $merge_cart['applied_coupons'] ) ); // Merge applied coupons.
-				$merge_cart['removed_cart_contents'] = maybe_unserialize( $cart['removed_cart_contents'] );
-				$merge_cart['removed_cart_contents'] = array_merge( $removed_cart_contents, $merge_cart['removed_cart_contents'] ); // Merge removed cart contents.
-				$merge_cart['cart_fees']             = maybe_unserialize( $cart['cart_fees'] );
-
-				// Check cart fees return as an array so not to crash if PHP 8 or higher is used.
-				if ( is_array( $merge_cart['cart_fees'] ) ) {
-					$merge_cart['cart_fees'] = array_merge( $cart_fees, $merge_cart['cart_fees'] ); // Merge cart fees.
-				}
-
-				// Checking if there is cart content to merge.
-				if ( ! empty( $merge_cart['cart'] ) ) {
-					$cart_contents = array_merge( $merge_cart['cart'], $cart_contents ); // Merge carts.
-				}
-			}
+			$cart_contents = WC()->session->get( 'cart', null );
 
 			// Merge saved cart with current cart.
 			if ( ! empty( $cart_contents ) && strval( get_current_user_id() ) > 0 ) {
@@ -170,17 +156,17 @@ if ( ! class_exists( 'CoCart_WooCommerce' ) ) {
 			if ( ! empty( $cart ) ) {
 				WC()->session->set( 'cart', $cart_contents );
 				WC()->session->set( 'cart_totals', maybe_unserialize( $cart['cart_totals'] ) );
-				WC()->session->set( 'applied_coupons', ! empty( $merge_cart['applied_coupons'] ) ? $merge_cart['applied_coupons'] : maybe_unserialize( $cart['applied_coupons'] ) );
+				WC()->session->set( 'applied_coupons', maybe_unserialize( $cart['applied_coupons'] ) );
 				WC()->session->set( 'coupon_discount_totals', maybe_unserialize( $cart['coupon_discount_totals'] ) );
 				WC()->session->set( 'coupon_discount_tax_totals', maybe_unserialize( $cart['coupon_discount_tax_totals'] ) );
-				WC()->session->set( 'removed_cart_contents', ! empty( $merge_cart['removed_cart_contents'] ) ? $merge_cart['removed_cart_contents'] : maybe_unserialize( $cart['removed_cart_contents'] ) );
+				WC()->session->set( 'removed_cart_contents', maybe_unserialize( $cart['removed_cart_contents'] ) );
 
 				if ( ! empty( $cart['chosen_shipping_methods'] ) ) {
 					WC()->session->set( 'chosen_shipping_methods', maybe_unserialize( $cart['chosen_shipping_methods'] ) );
 				}
 
 				if ( ! empty( $cart['cart_fees'] ) ) {
-					WC()->session->set( 'cart_fees', ! empty( $merge_cart['cart_fees'] ) ? $merge_cart['cart_fees'] : maybe_unserialize( $cart['cart_fees'] ) );
+					WC()->session->set( 'cart_fees', maybe_unserialize( $cart['cart_fees'] ) );
 				}
 			}
 		} // END load_cart_from_session()

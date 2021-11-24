@@ -4,11 +4,11 @@
  *
  * Handles the request to add items to the cart with /cart/add-item endpoint.
  *
- * @author  Sébastien Dumont
- * @package CoCart\API\v2
- * @since   3.0.0
- * @version 3.1.0
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\API\v2
+ * @since    3.0.0
+ * @version  3.0.1
+ * @license  GPL-2.0+
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -65,21 +65,25 @@ class CoCart_Add_Item_v2_Controller extends CoCart_Add_Item_Controller {
 	 *
 	 * @access  public
 	 * @since   1.0.0
-	 * @version 3.1.0
+	 * @version 3.0.0
 	 * @param   WP_REST_Request $request Full details about the request.
 	 * @return  WP_REST_Response
 	 */
 	public function add_to_cart( $request = array() ) {
 		try {
-			$product_id = ! isset( $request['id'] ) ? 0 : wc_clean( wp_unslash( $request['id'] ) );
-			$quantity   = ! isset( $request['quantity'] ) ? 1 : wc_clean( wp_unslash( $request['quantity'] ) );
-			$variation  = ! isset( $request['variation'] ) ? array() : $request['variation'];
-			$item_data  = ! isset( $request['item_data'] ) ? array() : $request['item_data'];
 
 			$controller = new CoCart_Cart_V2_Controller();
 
 			// Filters additional requested data.
 			$request = $controller->filter_request_data( $request );
+
+			$product_id = ! isset( $request['id'] ) ? 0 : wc_clean( wp_unslash( $request['id'] ) );
+			$quantity   = ! isset( $request['quantity'] ) ? 1 : wc_clean( wp_unslash( $request['quantity'] ) );
+			$variation  = ! isset( $request['variation'] ) ? array() : $request['variation'];
+			$item_data  = ! isset( $request['item_data'] ) ? array() : $request['item_data'];
+
+			// $_params = $request->get_params();
+			// \__log( $_params );
 
 			// Validate product ID before continuing and return correct product ID if different.
 			$product_id = $controller->validate_product_id( $product_id );
@@ -116,36 +120,7 @@ class CoCart_Add_Item_v2_Controller extends CoCart_Add_Item_Controller {
 			}
 
 			if ( ! is_wp_error( $was_added_to_cart ) ) {
-				/**
-				 * Set customers billing email address.
-				 *
-				 * @since 3.1.0
-				 */
-				if ( isset( $request['email'] ) ) {
-					WC()->customer->set_props(
-						array(
-							'billing_email' => trim( esc_html( $request['email'] ) ),
-						)
-					);
-				}
-
 				cocart_add_to_cart_message( array( $was_added_to_cart['product_id'] => $was_added_to_cart['quantity'] ) );
-
-				/**
-				 * Override cart item for anything extra.
-				 *
-				 * DEVELOPER WARNING: THIS FILTER CAN CAUSE HAVOC SO BE CAREFULL WHEN USING IT!
-				 *
-				 * @since 3.1.0
-				 */
-				$was_added_to_cart = apply_filters( 'cocart_override_cart_item', $was_added_to_cart, $request );
-
-				/**
-				 * Cache cart item.
-				 *
-				 * @since 3.1.0
-				 */
-				$controller->cache_cart_item( $was_added_to_cart );
 
 				// Was it requested to return the item details after being added?
 				if ( isset( $request['return_item'] ) && is_bool( $request['return_item'] ) && $request['return_item'] ) {
@@ -200,7 +175,7 @@ class CoCart_Add_Item_v2_Controller extends CoCart_Add_Item_Controller {
 	 *
 	 * @access  public
 	 * @since   2.1.0
-	 * @version 3.1.0
+	 * @version 3.0.0
 	 * @param   string          $product_id - Contains the id of the product to add to the cart.
 	 * @param   float           $quantity   - Contains the quantity of the item to add to the cart.
 	 * @param   null            $deprecated - Used to pass the variation id of the product to add to the cart.
@@ -209,7 +184,7 @@ class CoCart_Add_Item_v2_Controller extends CoCart_Add_Item_Controller {
 	 * @param   WP_REST_Request $request    - Full details about the request.
 	 * @return  bool            success or not
 	 */
-	public function add_to_cart_handler_variable( $product_id, $quantity, $deprecated, $variation, $item_data, $request = array() ) {
+	public function add_to_cart_handler_variable( $product_id, $quantity, $deprecated = null, $variation, $item_data, $request = array() ) {
 		$controller = new CoCart_Cart_V2_Controller();
 
 		$product_to_add = $controller->validate_product( $product_id, $quantity, $deprecated, $variation, $item_data, 'variable', $request );
@@ -236,7 +211,7 @@ class CoCart_Add_Item_v2_Controller extends CoCart_Add_Item_Controller {
 	 *
 	 * @access  public
 	 * @since   2.1.0
-	 * @version 3.1.0
+	 * @version 3.0.1
 	 * @param   array $product_to_add - Passes details of the item ready to add to the cart.
 	 * @return  array $item_added     - Returns details of the added item in the cart.
 	 */
@@ -284,7 +259,7 @@ class CoCart_Add_Item_v2_Controller extends CoCart_Add_Item_Controller {
 				 * @param $product_id   Contains the id of the product to add to the cart.
 				 */
 				if ( apply_filters( 'cocart_skip_woocommerce_item_validation', false, $product_data, $product_id ) ) {
-					$item_key = $controller->add_cart_item( $product_id, $quantity, $variation_id, $variation, $item_data, $product_data );
+					$item_key = $controller->add_cart_item( $product_id, $quantity, $variation_id, $variation, $item_data );
 				} else {
 					$item_key = $controller->get_cart_instance()->add_to_cart( $product_id, $quantity, $variation_id, $variation, $item_data );
 				}
@@ -341,7 +316,7 @@ class CoCart_Add_Item_v2_Controller extends CoCart_Add_Item_Controller {
 	 *
 	 * @access  public
 	 * @since   2.1.2
-	 * @version 3.1.0
+	 * @version 3.0.0
 	 * @return  array
 	 */
 	public function get_item_schema() {
@@ -371,16 +346,6 @@ class CoCart_Add_Item_v2_Controller extends CoCart_Add_Item_Controller {
 					'description' => __( 'Additional item data to make the item unique.', 'cart-rest-api-for-woocommerce' ),
 					'type'        => 'object',
 				),
-				'email'       => array(
-					'required'    => false,
-					'description' => __( 'Customers billing email address.', 'cart-rest-api-for-woocommerce' ),
-					'type'        => 'string',
-				),
-				'price'       => array(
-					'required'    => false,
-					'description' => __( 'Set a custom price for the item.', 'cart-rest-api-for-woocommerce' ),
-					'type'        => 'string',
-				),
 				'return_item' => array(
 					'required'    => false,
 					'default'     => false,
@@ -400,71 +365,48 @@ class CoCart_Add_Item_v2_Controller extends CoCart_Add_Item_Controller {
 	 *
 	 * @access  public
 	 * @since   2.1.0
-	 * @version 3.1.0
+	 * @version 3.0.0
 	 * @return  array $params
 	 */
 	public function get_collection_params() {
 		$controller = new CoCart_Cart_V2_Controller();
 
-		// Cart query parameters.
-		$params = $controller->get_collection_params();
-
-		// Add to cart query parameters.
-		$params += array(
-			'id'          => array(
-				'description'       => __( 'Unique identifier for the product or variation ID.', 'cart-rest-api-for-woocommerce' ),
-				'type'              => 'string',
-				'required'          => true,
-				'sanitize_callback' => 'sanitize_text_field',
-				'validate_callback' => 'rest_validate_request_arg',
-			),
-			'quantity'    => array(
-				'description'       => __( 'Quantity of this item to add to the cart.', 'cart-rest-api-for-woocommerce' ),
-				'type'              => 'string',
-				'default'           => '1',
-				'required'          => true,
-				'validate_callback' => array( $this, 'rest_validate_quantity_arg' ),
-			),
-			'variation'   => array(
-				'description'       => __( 'Variable attributes that identify the variation of the item.', 'cart-rest-api-for-woocommerce' ),
-				'type'              => 'object',
-				'required'          => false,
-				'validate_callback' => 'rest_validate_request_arg',
-			),
-			'item_data'   => array(
-				'description'       => __( 'Additional item data passed to make item unique.', 'cart-rest-api-for-woocommerce' ),
-				'type'              => 'object',
-				'required'          => false,
-				'validate_callback' => 'rest_validate_request_arg',
-			),
-			'email'       => array(
-				'description'       => __( 'Customers billing email address.', 'cart-rest-api-for-woocommerce' ),
-				'type'              => 'string',
-				'required'          => false,
-				'validate_callback' => 'rest_validate_request_arg',
-			),
-			'price'       => array(
-				'description'       => __( 'Set a custom price for the item.', 'cart-rest-api-for-woocommerce' ),
-				'type'              => 'string',
-				'required'          => false,
-				'validate_callback' => 'rest_validate_request_arg',
-			),
-			'return_item' => array(
-				'description' => __( 'Returns the item details once added.', 'cart-rest-api-for-woocommerce' ),
-				'default'     => false,
-				'required'    => false,
-				'type'        => 'boolean',
-			),
+		$params = array_merge(
+			$controller->get_collection_params(),
+			array(
+				'id'          => array(
+					'required'          => true,
+					'description'       => __( 'Unique identifier for the product or variation ID.', 'cart-rest-api-for-woocommerce' ),
+					'type'              => 'string',
+					'sanitize_callback' => 'sanitize_text_field',
+					'validate_callback' => 'rest_validate_request_arg',
+				),
+				'quantity'    => array(
+					'required'          => true,
+					'default'           => '1',
+					'description'       => __( 'Quantity of this item in the cart.', 'cart-rest-api-for-woocommerce' ),
+					'type'              => 'string',
+					'validate_callback' => array( $this, 'rest_validate_quantity_arg' ),
+				),
+				'variation'   => array(
+					'required'          => false,
+					'description'       => __( 'The variation attributes that identity the variation of the item.', 'cart-rest-api-for-woocommerce' ),
+					'type'              => 'object',
+					'validate_callback' => 'rest_validate_request_arg',
+				),
+				'item_data'   => array(
+					'required'          => false,
+					'description'       => __( 'Additional item data passed to make item unique.', 'cart-rest-api-for-woocommerce' ),
+					'type'              => 'object',
+					'validate_callback' => 'rest_validate_request_arg',
+				),
+				'return_item' => array(
+					'description' => __( 'Returns the item details once added.', 'cart-rest-api-for-woocommerce' ),
+					'default'     => false,
+					'type'        => 'boolean',
+				),
+			)
 		);
-
-		/**
-		 * Extend the query parameters.
-		 *
-		 * Dev Note: Nothing needs to pass so your safe if you think you will remove any default parameters.
-		 *
-		 * @since 3.1.0
-		 */
-		$params += apply_filters( 'cocart_add_item_query_parameters', array() );
 
 		return $params;
 	} // END get_collection_params()

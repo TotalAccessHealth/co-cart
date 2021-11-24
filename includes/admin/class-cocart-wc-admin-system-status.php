@@ -4,11 +4,11 @@
  *
  * Adds additional related information to the WooCommerce System Status.
  *
- * @author  Sébastien Dumont
- * @package CoCart\Admin\WooCommerce System Status
- * @since   2.1.0
- * @version 3.1.0
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\Admin\WooCommerce System Status
+ * @since    2.1.0
+ * @version  3.0.7
+ * @license  GPL-2.0+
  */
 
 // Exit if accessed directly.
@@ -385,7 +385,7 @@ if ( ! class_exists( 'CoCart_Admin_WC_System_Status' ) ) {
 					SELECT COUNT(cart_id) as count
 					FROM {$wpdb->prefix}cocart_carts 
 					WHERE cart_source=%s",
-					'cocart'
+					'cocart-rest-api'
 				),
 				ARRAY_A
 			);
@@ -413,7 +413,7 @@ if ( ! class_exists( 'CoCart_Admin_WC_System_Status' ) ) {
 					SELECT COUNT(cart_id) as count
 					FROM {$wpdb->prefix}cocart_carts 
 					WHERE cart_source!=%s AND cart_source!=%s",
-					'cocart',
+					'cocart-rest-api',
 					'woocommerce'
 				),
 				ARRAY_A
@@ -504,23 +504,20 @@ if ( ! class_exists( 'CoCart_Admin_WC_System_Status' ) ) {
 			);
 
 			return $tools;
-		} // END debug_button()
+		} // END debug_button
 
 		/**
 		 * Modifies the debug buttons under the tools section of
 		 * WooCommerce System Status should white labelling is enabled.
 		 *
-		 * @access  public
-		 * @since   3.0.0
-		 * @version 3.1.0
-		 * @param   array $tools - All tools before.
-		 * @return  array $tools - All tools after modifications.
+		 * @access public
+		 * @since  3.0.0
+		 * @param  array $tools - All tools before.
+		 * @return array $tools - All tools after modifications.
 		 */
 		public function cocart_tools( $tools ) {
 			unset( $tools['clear_sessions'] );
 			unset( $tools['cocart_sync_carts'] );
-			unset( $tools['cocart_update_db'] );
-			unset( $tools['cocart_verify_db_tables'] );
 
 			$tools['cocart_clear_carts']['desc'] = sprintf(
 				'<strong class="red">%1$s</strong> %2$s',

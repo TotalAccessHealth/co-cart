@@ -30,7 +30,7 @@ class CoCart_Data_Exception extends Exception {
 	 * Error extra data.
 	 *
 	 * @access public
-	 * @var    array $additional_data - Additional error data.
+	 * @var    array Additional error data.
 	 */
 	public $additional_data = array();
 

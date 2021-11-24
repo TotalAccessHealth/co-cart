@@ -2,11 +2,11 @@
 /**
  * Admin View: Notice - Base table missing.
  *
- * @author  Sébastien Dumont
- * @package CoCart\Admin\Views
- * @since   3.0.0
- * @version 3.1.0
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\Admin\Views
+ * @since    3.0.0
+ * @version  3.0.7
+ * @license  GPL-2.0+
  */
 
 // Exit if accessed directly.
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="notice notice-info cocart-notice">
 	<div class="cocart-notice-inner">
 		<div class="cocart-notice-icon">
-			<img src="<?php echo esc_url( COCART_URL_PATH . '/assets/images/brand/logo.jpg' ); ?>" alt="CoCart Logo" />
+			<img src="<?php echo esc_url( COCART_URL_PATH . '/assets/images/logo.jpg' ); ?>" alt="CoCart Logo" />
 		</div>
 
 		<div class="cocart-notice-content">
@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					echo wp_kses_post(
 						sprintf(
 						/* translators: %1%s: Missing table (separated by ",") %2$s: Link to check again */
-							__( 'One table is required for CoCart to function is missing and will not work as expected. Missing table: <code>%1$s</code> <a href="%2$s">Check again.</a>', 'cart-rest-api-for-woocommerce' ),
+							__( 'One table is required for CoCart to function is missing and will not work as expected. Missing table: %1$s. <a href="%2$s">Check again.</a>', 'cart-rest-api-for-woocommerce' ),
 							esc_html( implode( ', ', $missing_tables ) ),
 							wp_nonce_url( admin_url( 'admin.php?page=wc-status&tab=tools&action=cocart_verify_db_tables' ), 'debug_action' )
 						)
@@ -39,7 +39,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					echo wp_kses_post(
 						sprintf(
 						/* translators: %1%s: Missing table (separated by ",") */
-							__( 'One table is required for CoCart to function is missing and will not work as expected. Missing table: <code>%1$s</code>', 'cart-rest-api-for-woocommerce' ),
+							__( 'One table is required for CoCart to function is missing and will not work as expected. Missing table: %1$s.', 'cart-rest-api-for-woocommerce' ),
 							esc_html( implode( ', ', $missing_tables ) )
 						)
 					);

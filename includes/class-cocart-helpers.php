@@ -4,11 +4,11 @@
  *
  * Provides functions that provide helpful data for the plugin.
  *
- * @author  Sébastien Dumont
- * @package CoCart\Classes
- * @since   2.3.0
- * @version 3.0.12
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\Classes
+ * @since    2.3.0
+ * @version  3.0.12
+ * @license  GPL-2.0+
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -267,7 +267,7 @@ class CoCart_Helpers {
 	/**
 	 * Helper method to get the version of the currently installed CoCart.
 	 *
-	 * @access public
+	 * @access private
 	 * @static
 	 * @return string
 	 */
@@ -454,22 +454,6 @@ class CoCart_Helpers {
 
 		return $campaign;
 	} // END cocart_campaign()
-
-	/**
-	 * Returns an array of CoCart add-ons listed on WordPress.org
-	 *
-	 * @access public
-	 * @static
-	 * @since  3.1.0
-	 * @return array
-	 */
-	public static function get_wporg_cocart_plugins() {
-		return array(
-			'cocart-cors',
-			'cocart-get-cart-enhanced',
-			'cocart-carts-in-session',
-		);
-	} // ENF get_wporg_cocart_plugins()
 
 	/**
 	 * Seconds to words.

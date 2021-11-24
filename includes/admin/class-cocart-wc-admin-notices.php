@@ -4,11 +4,11 @@
  *
  * Adds relevant information to help developers with CoCart via the WooCommerce Inbox.
  *
- * @author  Sébastien Dumont
- * @package CoCart\Admin\WooCommerce Admin
- * @since   2.3.0
- * @version 3.0.7
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\Admin\WooCommerce Admin
+ * @since    2.3.0
+ * @version  3.0.7
+ * @license  GPL-2.0+
  */
 
 // Exit if accessed directly.
@@ -89,6 +89,7 @@ if ( ! class_exists( 'CoCart_WC_Admin_Notes' ) ) {
 		 * @return  object
 		 */
 		public static function create_new_note( $args = array() ) {
+			return; // bypass ##
 			if ( ! class_exists( 'WC_Data_Store' ) ) {
 				return;
 			}

@@ -2,11 +2,11 @@
 /**
  * CoCart - Installation related functions and actions.
  *
- * @author  Sébastien Dumont
- * @package CoCart\Classes
- * @since   1.2.0
- * @version 3.1.0
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\Classes
+ * @since    1.2.0
+ * @version  3.0.12
+ * @license  GPL-2.0+
  */
 
 // Exit if accessed directly.
@@ -35,7 +35,7 @@ if ( ! class_exists( 'CoCart_Install' ) ) {
 		 *
 		 * @access  public
 		 * @since   1.2.0
-		 * @version 3.1.0
+		 * @version 3.0.0
 		 */
 		public static function init() {
 			// Checks version of CoCart and install/update if needed.
@@ -45,7 +45,7 @@ if ( ! class_exists( 'CoCart_Install' ) ) {
 			add_action( 'admin_init', array( __CLASS__, 'install_actions' ) );
 
 			// Redirect to Getting Started page once activated.
-			add_action( 'activated_plugin', array( __CLASS__, 'redirect_getting_started' ), 10 );
+			add_action( 'activated_plugin', array( __CLASS__, 'redirect_getting_started' ), 10, 2 );
 
 			// Drop tables when MU blog is deleted.
 			add_filter( 'wpmu_drop_tables', array( __CLASS__, 'wpmu_drop_tables' ) );
@@ -162,7 +162,7 @@ if ( ! class_exists( 'CoCart_Install' ) ) {
 		 * @access  public
 		 * @static
 		 * @since   1.2.0
-		 * @version 3.1.0
+		 * @version 3.0.12
 		 */
 		public static function install() {
 			if ( ! is_blog_installed() ) {
@@ -200,9 +200,6 @@ if ( ! class_exists( 'CoCart_Install' ) ) {
 			// Set activation date.
 			self::set_install_date();
 
-			// Maybe see if we need to enable the setup wizard or not.
-			self::maybe_enable_setup_wizard();
-
 			// Update plugin version.
 			self::update_version();
 
@@ -217,20 +214,18 @@ if ( ! class_exists( 'CoCart_Install' ) ) {
 		/**
 		 * Check if all the base tables are present.
 		 *
-		 * @access  public
+		 * @access public
 		 * @static
-		 * @since   3.0.0
-		 * @version 3.1.0
-		 * @param   bool $modify_notice Whether to modify notice based on if all tables are present.
-		 * @param   bool $execute       Whether to execute get_schema queries as well.
-		 * @return  array List of querues.
+		 * @since  3.0.0
+		 * @param  bool $modify_notice Whether to modify notice based on if all tables are present.
+		 * @param  bool $execute       Whether to execute get_schema queries as well.
+		 * @return array List of querues.
 		 */
 		public static function verify_base_tables( $modify_notice = true, $execute = false ) {
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 			if ( $execute ) {
 				self::create_tables();
-				self::maybe_update_db_version();
 			}
 
 			$queries        = dbDelta( self::get_schema(), false );
@@ -304,20 +299,6 @@ if ( ! class_exists( 'CoCart_Install' ) ) {
 
 			return ! is_null( $current_db_version ) && version_compare( $current_db_version, end( $update_versions ), '<' );
 		} // END needs_db_update()
-
-		/**
-		 * See if we need the setup wizard or not.
-		 *
-		 * @access private
-		 * @static
-		 * @since  3.1.0
-		 */
-		private static function maybe_enable_setup_wizard() {
-			if ( apply_filters( 'cocart_enable_setup_wizard', true ) && self::is_new_install() ) {
-				CoCart_Admin_Notices::add_notice( 'setup_wizard', true );
-				set_transient( '_cocart_activation_redirect', 1, 30 );
-			}
-		} // END maybe_enable_setup_wizard()
 
 		/**
 		 * See if we need to show or run database updates during install.
@@ -420,17 +401,14 @@ if ( ! class_exists( 'CoCart_Install' ) ) {
 		 * @access  public
 		 * @static
 		 * @since   1.2.0
-		 * @version 3.1.0
-		 * @param   string $plugin - Activate plugin file.
+		 * @version 3.0.7
+		 * @param   string $plugin             Activate plugin file.
+		 * @param   bool   $network_activation Whether to enable the plugin for all sites in the network
+		 *                                     or just the current site. Multisite only.
 		 */
-		public static function redirect_getting_started( $plugin ) {
+		public static function redirect_getting_started( $plugin, $network_activation ) {
 			// Prevent redirect if plugin name does not match or multiple plugins are being activated.
 			if ( plugin_basename( COCART_FILE ) !== $plugin || isset( $_GET['activate-multi'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				return;
-			}
-
-			// Dont redirect to getting started page if CoCart is not a new install.
-			if ( ! get_transient( '_cocart_activation_redirect' ) ) {
 				return;
 			}
 
@@ -465,13 +443,11 @@ if ( ! class_exists( 'CoCart_Install' ) ) {
 		/**
 		 * Create cron jobs (clear them first).
 		 *
-		 * @access  private
+		 * @access private
 		 * @static
-		 * @since   2.1.0
-		 * @version 3.1.0
+		 * @since  2.1.0
 		 */
 		private static function create_cron_jobs() {
-			wp_clear_scheduled_hook( 'woocommerce_cleanup_sessions' ); // Remove WooCommerce cleanup sessions event.
 			wp_clear_scheduled_hook( 'cocart_cleanup_carts' );
 
 			wp_schedule_event( time() + ( 6 * HOUR_IN_SECONDS ), 'twicedaily', 'cocart_cleanup_carts' );
@@ -487,27 +463,17 @@ if ( ! class_exists( 'CoCart_Install' ) ) {
 		 * @access  private
 		 * @static
 		 * @since   2.1.0
-		 * @version 3.1.0
+		 * @version 3.0.0
 		 * @global  $wpdb
 		 */
 		private static function create_tables() {
 			global $wpdb;
 
-			$show_errors = $wpdb->hide_errors();
-			$table_name  = $wpdb->prefix . 'cocart_carts';
+			$wpdb->hide_errors();
 
-			$table = self::get_schema();
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-			$exists = self::maybe_create_table( $table_name, $table );
-
-			if ( $show_errors ) {
-				$wpdb->show_errors();
-			}
-
-			// If table does not exist, ask user if they have privileges.
-			if ( ! $exists ) {
-				self::add_create_table_notice( $table_name );
-			}
+			dbDelta( self::get_schema() );
 		} // END create_tables()
 
 		/**
@@ -515,17 +481,16 @@ if ( ! class_exists( 'CoCart_Install' ) ) {
 		 *
 		 * @access private
 		 * @static
-		 * @since   3.0.0
-		 * @version 3.1.0
-		 * @global  $wpdb
-		 * @return  string
+		 * @since  3.0.0
+		 * @global $wpdb
+		 * @return string
 		 */
 		private static function get_schema() {
 			global $wpdb;
 
 			$collate = $wpdb->has_cap( 'collation' ) ? $wpdb->get_charset_collate() : '';
 
-			$table = "CREATE TABLE {$wpdb->prefix}cocart_carts (
+			$tables = "CREATE TABLE {$wpdb->prefix}cocart_carts (
  cart_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
  cart_key char(42) NOT NULL,
  cart_value longtext NOT NULL,
@@ -537,56 +502,8 @@ if ( ! class_exists( 'CoCart_Install' ) ) {
  UNIQUE KEY cart_key (cart_key)
 ) $collate;";
 
-			return $table;
+			return $tables;
 		} // END get_schema()
-
-		/**
-		 * Create database table, if it doesn't already exist.
-		 *
-		 * Based on admin/install-helper.php maybe_create_table function.
-		 *
-		 * @source https://developer.wordpress.org/reference/functions/maybe_create_table/
-		 *
-		 * @access protected
-		 * @since  3.1.0
-		 * @param  string $table_name Database table name.
-		 * @param  string $create_sql Create database table SQL.
-		 * @return bool False on error, true if already exists or success.
-		 */
-		protected static function maybe_create_table( $table_name, $create_sql ) {
-			global $wpdb;
-
-			if ( in_array( $table_name, $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ), 0 ), true ) ) {
-				return true;
-			}
-
-			$wpdb->query( $create_sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-
-			return in_array( $table_name, $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ), 0 ), true );
-		} // END maybe_create_table()
-
-		/**
-		 * Add a notice if table creation fails.
-		 *
-		 * @access protected
-		 * @static
-		 * @since  3.1.0
-		 * @param  string $table_name Name of the missing table.
-		 */
-		protected static function add_create_table_notice( $table_name ) {
-			set_transient( '_cocart_db_creation_failed', 1, MINUTE_IN_SECONDS * 5 );
-
-			$notice = sprintf(
-				/* translators: %2$s table name, %3$s database user, %4$s database name. */
-				esc_html__( '%1$s %2$s table creation failed. Does the %3$s user have CREATE privileges on the %4$s database?', 'cart-rest-api-for-woocommerce' ),
-				'CoCart',
-				'<code>' . esc_html( $table_name ) . '</code>',
-				'<code>' . esc_html( DB_USER ) . '</code>',
-				'<code>' . esc_html( DB_NAME ) . '</code>'
-			);
-
-			CoCart_Admin_Notices::add_custom_notice( 'db_creation_failed', $notice );
-		} // END add_create_table_notice()
 
 		/**
 		 * Return a list of CoCart tables. Used to make sure all CoCart tables

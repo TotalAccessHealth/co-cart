@@ -8,11 +8,11 @@
  *
  * @link https://github.com/woocommerce/woocommerce/blob/master/includes/class-wc-session-handler.php
  *
- * @author  Sébastien Dumont
- * @package CoCart\Classes
- * @since   2.1.0
- * @version 3.1.0
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\Classes
+ * @since    2.1.0
+ * @version  3.0.14
+ * @license  GPL-2.0+
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -643,19 +643,6 @@ class CoCart_Session_Handler extends CoCart_Session {
 
 		return maybe_unserialize( $value );
 	} // END get_cart()
-
-	/**
-	 * Returns the session.
-	 *
-	 * @access public
-	 * @since  3.1.0
-	 * @param  string $cart_key The customer ID or cart key.
-	 * @param  mixed  $default  Default cart value.
-	 * @return string|array
-	 */
-	public function get_session( $cart_key, $default = false ) {
-		return $this->get_cart( $cart_key, $default );
-	} // END get_session()
 
 	/**
 	 * Returns the timestamp the cart was created.

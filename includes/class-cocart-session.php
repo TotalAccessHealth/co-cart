@@ -2,11 +2,11 @@
 /**
  * Handles loading cart from session.
  *
- * @author  Sébastien Dumont
- * @package CoCart\Classes
- * @since   2.1.0
- * @version 3.1.0
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart\Classes
+ * @since    2.1.0
+ * @version  3.0.0
+ * @license  GPL-2.0+
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -83,18 +83,12 @@ class CoCart_API_Session {
 	 * @access  public
 	 * @static
 	 * @since   2.1.0
-	 * @version 3.1.0
+	 * @version 2.4.0
 	 */
 	public static function cleanup_carts() {
-		if ( ! class_exists( 'CoCart_Session_Handler' ) ) {
-			include_once COCART_ABSPATH . 'includes/abstracts/abstract-cocart-session.php';
-			include_once COCART_ABSPATH . 'includes/class-cocart-session-handler.php';
-		}
-
-		$session = new CoCart_Session_Handler();
-
-		if ( is_callable( array( $session, 'cleanup_sessions' ) ) ) {
-			$session->cleanup_sessions();
+		if ( class_exists( 'CoCart_Session_Handler' ) ) {
+			$handler = new CoCart_Session_Handler();
+			$handler->cleanup_sessions();
 		}
 	} // END cleanup_carts()
 
@@ -108,7 +102,7 @@ class CoCart_API_Session {
 	 * @access  public
 	 * @static
 	 * @since   2.1.0
-	 * @version 3.1.0
+	 * @version 3.0.0
 	 */
 	public static function load_cart_action() {
 		if ( self::maybe_load_cart() ) {
@@ -119,33 +113,29 @@ class CoCart_API_Session {
 
 			wc_nocache_headers();
 
-			// Check the cart doesn't belong to a registered user - only guest carts should be loadable from session.
-			$user = get_user_by( 'id', $cart_key );
+			// Check the user is logged in. If true a different cart cannot be loaded so just return.
+			if ( is_user_logged_in() ) {
+				$current_user = wp_get_current_user();
+				$user_id      = $current_user->ID;
 
-			// If the user exists, the cart key is for a registered user so we should just return.
-			if ( ! empty( $user ) ) {
-				if ( is_user_logged_in() ) {
-					$current_user = wp_get_current_user();
-					$user_id      = $current_user->ID;
-
-					// Compare the user ID with the cart key.
-					if ( $user_id === $cart_key ) {
-						/* translators: %s: cart key */
-						CoCart_Logger::log( sprintf( __( 'Cart key "%s" is already loaded as the currently logged in user.', 'cart-rest-api-for-woocommerce' ), $cart_key ), 'error' );
-					} else {
-						/* translators: %s: cart key */
-						CoCart_Logger::log( sprintf( __( 'Customer is logged in as a different user. Cart key "%s" cannot be loaded into session for a different user.', 'cart-rest-api-for-woocommerce' ), $cart_key ), 'error' );
-					}
+				// Compare the user ID with the cart key.
+				if ( $user_id === $cart_key ) {
+					/* translators: %s: cart key */
+					CoCart_Logger::log( sprintf( __( 'Cart key "%s" is already loaded as the user is logged in.', 'cart-rest-api-for-woocommerce' ), $cart_key ), 'errro' );
 				} else {
-					CoCart_Logger::log( __( 'Cart key is recognised as a registered user on site. Cannot be loaded into session as a guest.', 'cart-rest-api-for-woocommerce' ), 'error' );
+					/* translators: %s: cart key */
+					CoCart_Logger::log( sprintf( __( 'Customer is already logged in. Cart key "%s" cannot be loaded into session.', 'cart-rest-api-for-woocommerce' ), $cart_key ), 'error' );
 				}
-
-				// Display notice to developer if debug mode is enabled.
-				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-					wc_add_notice( __( 'Technical error made! See error log for reason.', 'cart-rest-api-for-woocommerce' ), 'error' );
-				}
-
 				return;
+			} else {
+				// If user is not logged in, check that the cart key does not belong to a user registered.
+				$user = get_user_by( 'id', $cart_key );
+
+				// If the user exists then just return.
+				if ( ! empty( $user ) ) {
+					CoCart_Logger::log( __( 'Cart key is recognised as a registered user on site. Cannot be loaded into session.', 'cart-rest-api-for-woocommerce' ), 'error' );
+					return;
+				}
 			}
 
 			// At this point, the cart should load into session with no issues as we have passed verification.
@@ -164,6 +154,8 @@ class CoCart_API_Session {
 			$handler     = new CoCart_Session_Handler();
 			$stored_cart = $handler->get_cart( $cart_key );
 
+			\__log( $stored_cart['cart'] );
+
 			if ( empty( $stored_cart ) ) {
 				/* translators: %s: cart key */
 				CoCart_Logger::log( sprintf( __( 'Unable to find cart for: %s', 'cart-rest-api-for-woocommerce' ), $cart_key ), 'info' );
@@ -177,6 +169,8 @@ class CoCart_API_Session {
 
 			// Get the cart currently in session if any.
 			$cart_in_session = WC()->session->get( 'cart', null );
+
+			\__log( $cart_in_session );
 
 			$new_cart = array();
 
@@ -196,6 +190,7 @@ class CoCart_API_Session {
 
 			// Check if we are overriding the cart currently in session via the web.
 			if ( $override_cart ) {
+				// \__log( 'override cart...' );
 				// Only clear the cart if it's not already empty.
 				if ( ! WC()->cart->is_empty() ) {
 					WC()->cart->empty_cart( false );
@@ -203,9 +198,12 @@ class CoCart_API_Session {
 					do_action( 'cocart_load_cart_override', $new_cart, $stored_cart );
 				}
 			} else {
+				// \__log( 'DO NOT override cart...' );
+				\__log( $new_cart );
 				$new_cart_content                       = array_merge( $new_cart['cart'], $cart_in_session );
+				\__log( $new_cart_content );
 				$new_cart['cart']                       = apply_filters( 'cocart_merge_cart_content', $new_cart_content, $new_cart['cart'], $cart_in_session );
-				$new_cart['applied_coupons']            = array_unique( array_merge( $new_cart['applied_coupons'], WC()->cart->get_applied_coupons() ) );
+				$new_cart['applied_coupons']            = array_merge( $new_cart['applied_coupons'], WC()->cart->get_applied_coupons() );
 				$new_cart['coupon_discount_totals']     = array_merge( $new_cart['coupon_discount_totals'], WC()->cart->get_coupon_discount_totals() );
 				$new_cart['coupon_discount_tax_totals'] = array_merge( $new_cart['coupon_discount_tax_totals'], WC()->cart->get_coupon_discount_tax_totals() );
 				$new_cart['removed_cart_contents']      = array_merge( $new_cart['removed_cart_contents'], WC()->cart->get_removed_cart_contents() );

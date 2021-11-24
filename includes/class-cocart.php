@@ -2,11 +2,11 @@
 /**
  * CoCart core setup.
  *
- * @author  Sébastien Dumont
- * @package CoCart
- * @since   2.6.0
- * @version 3.1.0
- * @license GPL-2.0+
+ * @author   Sébastien Dumont
+ * @package  CoCart
+ * @since    2.6.0
+ * @version  3.0.8
+ * @license  GPL-2.0+
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,7 +27,7 @@ final class CoCart {
 	 * @static
 	 * @var string
 	 */
-	public static $version = '3.1.0-rc.5';
+	public static $version = '3.0.16';
 
 	/**
 	 * CoCart Database Schema version.
@@ -45,9 +45,9 @@ final class CoCart {
 	 * @access public
 	 * @static
 	 * @since  2.3.0
-	 * @var    string
+	 * @var string
 	 */
-	public static $required_wp = '5.5';
+	public static $required_wp = '5.4';
 
 	/**
 	 * Required WooCommerce Version
@@ -56,7 +56,7 @@ final class CoCart {
 	 * @static
 	 * @since   1.0.0
 	 * @version 2.1.0
-	 * @var     string
+	 * @var string
 	 */
 	public static $required_woo = '4.3';
 
@@ -66,7 +66,7 @@ final class CoCart {
 	 * @access public
 	 * @static
 	 * @since  2.6.0
-	 * @var    string
+	 * @var string
 	 */
 	public static $required_php = '7.3';
 
@@ -187,7 +187,7 @@ final class CoCart {
 	 * @access  public
 	 * @static
 	 * @since   1.0.0
-	 * @version 3.1.0
+	 * @version 3.0.0
 	 * @return  void
 	 */
 	public static function includes() {
@@ -195,16 +195,11 @@ final class CoCart {
 		include_once COCART_ABSPATH . 'includes/class-cocart-autoloader.php';
 
 		// Abstracts.
-		include_once COCART_ABSPATH . 'includes/abstracts/abstract-cocart-extension-callback.php';
-
-		// Background functions.
-		include_once COCART_ABSPATH . 'includes/cocart-background-functions.php';
+		include_once COCART_ABSPATH . 'includes/abstracts/abstract-cocart-session.php';
 
 		// Core classes.
 		include_once COCART_ABSPATH . 'includes/class-cocart-api.php';
 		include_once COCART_ABSPATH . 'includes/class-cocart-authentication.php';
-		include_once COCART_ABSPATH . 'includes/class-cocart-cart-cache.php';
-		include_once COCART_ABSPATH . 'includes/class-cocart-cart-extension.php';
 		include_once COCART_ABSPATH . 'includes/class-cocart-helpers.php';
 		include_once COCART_ABSPATH . 'includes/class-cocart-install.php';
 		include_once COCART_ABSPATH . 'includes/class-cocart-logger.php';
@@ -227,9 +222,8 @@ final class CoCart {
 		 * NOT set or IS set to false in user's wp-config.php file.
 		 */
 		if (
-			! defined( 'COCART_WHITE_LABEL' ) ||
-			false === COCART_WHITE_LABEL && is_admin() ||
-			( defined( 'WP_CLI' ) && WP_CLI )
+			! defined( 'COCART_WHITE_LABEL' ) || false === COCART_WHITE_LABEL &&
+			is_admin() || ( defined( 'WP_CLI' ) && WP_CLI )
 		) {
 			include_once COCART_ABSPATH . 'includes/admin/class-cocart-admin.php';
 		} else {
@@ -342,13 +336,12 @@ final class CoCart {
 	 * @access  public
 	 * @static
 	 * @since   2.1.2
-	 * @version 3.1.0
+	 * @version 3.0.0
 	 * @param   string $handler WooCommerce Session Handler.
 	 * @return  string $handler CoCart Session Handler.
 	 */
 	public static function session_handler( $handler ) {
 		if ( class_exists( 'WC_Session' ) ) {
-			include_once COCART_ABSPATH . 'includes/abstracts/abstract-cocart-session.php';
 			include_once COCART_ABSPATH . 'includes/class-cocart-session-handler.php';
 			$handler = 'CoCart_Session_Handler';
 		}
