@@ -72,15 +72,15 @@ class CoCart_Add_Item_v2_Controller extends CoCart_Add_Item_Controller {
 	public function add_to_cart( $request = array() ) {
 		try {
 
-			$controller = new CoCart_Cart_V2_Controller();
-
-			// Filters additional requested data.
-			$request = $controller->filter_request_data( $request );
-
 			$product_id = ! isset( $request['id'] ) ? 0 : wc_clean( wp_unslash( $request['id'] ) );
 			$quantity   = ! isset( $request['quantity'] ) ? 1 : wc_clean( wp_unslash( $request['quantity'] ) );
 			$variation  = ! isset( $request['variation'] ) ? array() : $request['variation'];
 			$item_data  = ! isset( $request['item_data'] ) ? array() : $request['item_data'];
+
+			$controller = new CoCart_Cart_V2_Controller();
+
+			// Filters additional requested data.
+			$request = $controller->filter_request_data( $request );
 
 			// $_params = $request->get_params();
 			// \__log( $_params );

@@ -150,13 +150,11 @@ class CoCart_API_Session {
 				$notify_customer = true;
 			}
 
-			// Get the cart in the database.
+			// Get the CoCart in the database.
 			$handler     = new CoCart_Session_Handler();
 			$stored_cart = $handler->get_cart( $cart_key );
 
-			\__log( $stored_cart['cart'] );
-
-			if ( empty( $stored_cart ) ) {
+			if ( empty( $stored_cart ) || ! isset( $stored_cart['cart'] ) ) {
 				/* translators: %s: cart key */
 				CoCart_Logger::log( sprintf( __( 'Unable to find cart for: %s', 'cart-rest-api-for-woocommerce' ), $cart_key ), 'info' );
 
@@ -167,9 +165,12 @@ class CoCart_API_Session {
 				return;
 			}
 
-			// Get the cart currently in session if any.
+			// \__log( $stored_cart['cart'] );
+
+			// Get the WC cart currently in session, if any.
 			$cart_in_session = WC()->session->get( 'cart', null );
 
+			// this is the current WC cart content ##
 			\__log( $cart_in_session );
 
 			$new_cart = array();
@@ -188,6 +189,12 @@ class CoCart_API_Session {
 				$new_cart['cart_fees'] = maybe_unserialize( $stored_cart['cart_fees'] );
 			}
 
+			// this is the new cart, based on the CoCart guest content ##
+			// \__log( $new_cart['cart'] );
+
+			// stop here ##
+			// return;
+
 			// Check if we are overriding the cart currently in session via the web.
 			if ( $override_cart ) {
 				// \__log( 'override cart...' );
@@ -199,9 +206,9 @@ class CoCart_API_Session {
 				}
 			} else {
 				// \__log( 'DO NOT override cart...' );
-				\__log( $new_cart );
+				// \__log( $new_cart );
 				$new_cart_content                       = array_merge( $new_cart['cart'], $cart_in_session );
-				\__log( $new_cart_content );
+				// \__log( $new_cart_content );
 				$new_cart['cart']                       = apply_filters( 'cocart_merge_cart_content', $new_cart_content, $new_cart['cart'], $cart_in_session );
 				$new_cart['applied_coupons']            = array_merge( $new_cart['applied_coupons'], WC()->cart->get_applied_coupons() );
 				$new_cart['coupon_discount_totals']     = array_merge( $new_cart['coupon_discount_totals'], WC()->cart->get_coupon_discount_totals() );
@@ -210,6 +217,9 @@ class CoCart_API_Session {
 
 				do_action( 'cocart_load_cart', $new_cart, $stored_cart, $cart_in_session );
 			}
+
+			// stop here ##
+			// return;
 
 			// Destroy cart and cookie if user is a guest customer before creating a new one.
 			if ( ! is_user_logged_in() ) {
@@ -240,6 +250,8 @@ class CoCart_API_Session {
 				WC()->session->set_customer_cart_cookie( true );
 			}
 
+			\__log( WC()->session->get( 'cart', null ) );
+
 			// If true, notify the customer that there cart has transferred over via the web.
 			if ( ! empty( $new_cart ) && $notify_customer ) {
 				/* translators: %1$s: Start of link to Shop archive. %2$s: Start of link to checkout page. %3$s: Closing link tag. */
@@ -257,7 +269,7 @@ class CoCart_API_Session {
 	 * @return bool
 	 */
 	public static function maybe_load_cart() {
-		// Check that "Load Cart from Session" feature is disabled.
+		// Check if "Load Cart from Session" feature is disabled.
 		if ( apply_filters( 'cocart_disable_load_cart', false ) ) {
 			return false;
 		}
