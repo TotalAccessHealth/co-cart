@@ -225,6 +225,8 @@ class CoCart_Add_Item_v2_Controller extends CoCart_Add_Item_Controller {
 		$product_data = $product_to_add['product_data'];
 		$request      = $product_to_add['request'];
 
+		\__log( 'CoCart add to to cart....' );
+
 		try {
 			$controller = new CoCart_Cart_V2_Controller();
 

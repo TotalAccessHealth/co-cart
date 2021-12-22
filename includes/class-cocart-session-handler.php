@@ -95,6 +95,16 @@ class CoCart_Session_Handler extends CoCart_Session {
 	 * @version 3.0.0
 	 */
 	public function init() {
+
+		// \__log( 'Running...' );
+		if ( \is_admin() || \wp_doing_ajax() ){
+
+			// \__log( 'In the admin or doing ajax.. so return...' );
+
+			return;
+
+		}
+
 		// Current user ID. If user is NOT logged in then the customer is a guest.
 		$current_user_id = strval( get_current_user_id() );
 
@@ -176,6 +186,8 @@ class CoCart_Session_Handler extends CoCart_Session {
 				// Update customer ID details.
 				$guest_cart_id      = $this->_customer_id;
 				$this->_customer_id = $current_user_id;
+
+				\__log( 'guest cart id: '.$guest_cart_id );
 
 				// Save cart data under customers ID number and remove old guest cart.
 				$this->save_cart( $guest_cart_id );
@@ -623,17 +635,28 @@ class CoCart_Session_Handler extends CoCart_Session {
 	 * @return string|array
 	 */
 	public function get_cart( $cart_key, $default = false ) {
+
+		// \__log( 'get cart for key: '.$cart_key );
+
 		global $wpdb;
 
 		// Try to get it from the cache, it will return false if not present or if object cache not in use.
 		$value = wp_cache_get( $this->get_cache_prefix() . $cart_key, COCART_CART_CACHE_GROUP );
 
 		if ( false === $value ) {
+
+			// \__log( 'nothing in cache' );
+
 			$value = $wpdb->get_var( $wpdb->prepare( "SELECT cart_value FROM $this->_table WHERE cart_key = %s", $cart_key ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 			if ( is_null( $value ) ) {
+
+				// \__log( 'value is empty...' );
+
 				$value = $default;
 			}
+
+			// \__log( $value );
 
 			$cache_duration = $this->_cart_expiration - time();
 			if ( 0 < $cache_duration ) {
@@ -641,7 +664,11 @@ class CoCart_Session_Handler extends CoCart_Session {
 			}
 		}
 
-		return maybe_unserialize( $value );
+		$value = maybe_unserialize( $value );
+
+		// \__log( $value );
+
+		return $value;
 	} // END get_cart()
 
 	/**
