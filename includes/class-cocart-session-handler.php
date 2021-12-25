@@ -97,10 +97,13 @@ class CoCart_Session_Handler extends CoCart_Session {
 	public function init() {
 
 		// \__log( 'Running...' );
-		if ( \is_admin() || \wp_doing_ajax() ){
+		if (
+			\is_admin()
+			&& !\wp_doing_ajax()
+		){
 
+			// @TODO --- COCART BUG ??
 			// \__log( 'In the admin or doing ajax.. so return...' );
-
 			return;
 
 		}

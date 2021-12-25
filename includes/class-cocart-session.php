@@ -171,7 +171,7 @@ class CoCart_API_Session {
 			$cart_in_session = WC()->session->get( 'cart', null );
 
 			// this is the current WC cart content ##
-			\__log( $cart_in_session );
+			// \__log( $cart_in_session );
 
 			$new_cart = array();
 
@@ -197,7 +197,7 @@ class CoCart_API_Session {
 
 			// Check if we are overriding the cart currently in session via the web.
 			if ( $override_cart ) {
-				\__log( 'override cart...' );
+				// \__log( 'override cart...' );
 				// Only clear the cart if it's not already empty.
 				if ( ! WC()->cart->is_empty() ) {
 					WC()->cart->empty_cart( false );
@@ -205,7 +205,7 @@ class CoCart_API_Session {
 					do_action( 'cocart_load_cart_override', $new_cart, $stored_cart );
 				}
 			} else {
-				\__log( 'DO NOT override cart...' );
+				// \__log( 'DO NOT override cart...' );
 				// \__log( $new_cart );
 				$new_cart_content                       = array_merge( $new_cart['cart'], $cart_in_session );
 				// \__log( $new_cart_content );
