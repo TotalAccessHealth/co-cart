@@ -103,8 +103,8 @@ class CoCart_Session_Handler extends CoCart_Session {
 		){
 
 			// @TODO --- COCART BUG ??
-			// \__log( 'In the admin or doing ajax.. so return...' );
-			return;
+			\__log( 'In the admin or doing ajax.. so return...??' );
+			// return;
 
 		}
 
