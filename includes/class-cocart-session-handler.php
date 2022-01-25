@@ -190,7 +190,7 @@ class CoCart_Session_Handler extends CoCart_Session {
 				$guest_cart_id      = $this->_customer_id;
 				$this->_customer_id = $current_user_id;
 
-				\__log( 'guest cart id: '.$guest_cart_id );
+				// \__log( 'guest cart id: '.$guest_cart_id );
 
 				// Save cart data under customers ID number and remove old guest cart.
 				$this->save_cart( $guest_cart_id );
